@@ -29,6 +29,9 @@
 #define COLOR_MAGENTA "\x1b[35m"
 
 
+/*
+ * This prints the help for the testable application.
+ */
 void print_help()
 {
   std::cout << "Dry Run " << DRY_RUN_MAJ_VER << "." << DRY_RUN_MIN_VER << "\n"
@@ -40,6 +43,11 @@ void print_help()
             "-c\t\tUse ANSI colors for easier reading.";
 }
 
+/*
+ * Each test_case stores a runnable test with a description and a function object to actually.
+ * The function object is the test that is run. It must return a bool. True is considered a
+ * successful test, false is unsuccessful.
+ */
 struct test_case
 {
   std::string desc;
@@ -52,6 +60,13 @@ struct test_case
   }
 
 };
+
+/*
+ * These operator overloads are required for sorting and randomized
+ * shuffling of the test_cases. Since function objects can't be compared,
+ * the comparisons are done solely based upon the description of the
+ * test_case.
+ */
 bool operator==(const test_case& lhs, const test_case& rhs)
 {
   return lhs.desc == rhs.desc;
@@ -61,38 +76,62 @@ bool operator<(const test_case& lhs, const test_case& rhs)
   return lhs.desc < rhs.desc;
 }
 
+/// The primary class for running test cases.
+/** The primary way to create a test is to created a test_suite, then call
+ * add_test on the objects to add consecutive tests.
+ */
 struct test_suite
 {
   std::vector<test_case> test_list;
   std::function<void ()> before_func, before_each_func;
   std::function<void ()> after_func, after_each_func;
 
+  /** The method used to add runnable tests. 
+   * @param   desc    A string description (typically short) to describe the test.
+   * @param   test    A function object, usually a C++11 lambda, that returns a bool.
+   */
   void add_test(std::string desc, std::function<bool ()> test)
   {
     test_list.push_back(test_case(desc, test));
   }
 
+  /** Perform an action before the battery of tests, once.
+   * @param   func    Function object to perform.
+   */
   void before(std::function<void ()> func)
   {
     before_func = func;
   }
 
+  /** Perform an action before each test.
+   * @param   func    Function object to perform.
+   */
   void before_each(std::function<void ()> func)
   {
     before_each_func = func;
   }
 
+  /** Perform an action once after all tests have run.
+   * @param   func    Function object to perform.
+   */
   void after(std::function<void ()> func)
   {
     after_func = func;
   }
 
+  /** Perform an action after every individual test.
+   * @param   func    Function object to perform.
+   */
   void after_each(std::function<void ()> func)
   {
     after_each_func = func;
   }
 };
 
+// Much like the test_case class, this represents a runnable benchmark.
+// Along with the string description, it also uses a function object (which
+// return void) and an integer reps that describes the number of times to
+// repeat the benchmark.
 struct bench_case
 {
   std::string desc;
@@ -107,6 +146,10 @@ struct bench_case
   }
 };
 
+// The primary class for running benchmarks.
+/** The primary way to create a benchmark is to created a bench_suite, then call
+ * add_benchmark on the objects to add consecutive benchmarks.
+ */
 struct bench_suite
 {
   std::vector<bench_case> bench_list;
@@ -118,6 +161,15 @@ struct bench_suite
 };
 
 
+/** This is the meat and potatoes method of Dry Run testing. After setting up the tests
+ * to run, evoke this function to actually run them. This function processes command
+ * line arguments for the user as well, which is why argc and argv are passed in
+ * from main().
+ * Output: The test results
+ * @param   argc    Passed in from main.
+ * @param   argv    Passed in from main.
+ * @param   tests   The test_suite created that contains the actual tests to run.
+ */
 void dry_run(int argc, char** argv, test_suite& tests)
 {
   if (tests.test_list.empty()) return;
@@ -206,6 +258,16 @@ void dry_run(int argc, char** argv, test_suite& tests)
   std::cout << "\n\n";
 }
 
+/** The method used to execute benchmarks. After setting up the benchmarks
+ * to run, evoke this function to actually run them. This function processes command
+ * line arguments for the user as well, which is why argc and argv are passed in
+ * from main(). This work in tandem with dry_run() so there is no conflic if
+ * both benchmarks and tests are run.
+ * Output: The test results
+ * @param   argc    Passed in from main.
+ * @param   argv    Passed in from main.
+ * @param   tests   The bench_suite created that contains the actual tests to run.
+ */
 void dry_run_benchmarks(int argc, char **argv, bench_suite &benchmarks)
 {
   bool colors = false;
