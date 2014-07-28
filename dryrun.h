@@ -34,13 +34,18 @@
  */
 void print_help()
 {
-  std::cout << "Dry Run " << DRY_RUN_MAJ_VER << "." << DRY_RUN_MIN_VER << "\n"
+  // Since both dry_run and dry_run_benchmark can process --help and show this help screen,
+  // this static variable ensure that typing --help will only run this once and not twice.
+  static bool already_printed = false;  
+  if (!already_printed)
+    std::cout << "Dry Run " << DRY_RUN_MAJ_VER << "." << DRY_RUN_MIN_VER << "\n"
             "Usage: test [options]\n"
             "Options:\n\n"
             "-d\t\tRun tests in determinate mode (non-randomized).\n"
             "-r\t\tRepeat tests multiple times. Ex: test -r 10\n"
             "-h,--help\tShow this help screen.\n"
-            "-c\t\tUse ANSI colors for easier reading.";
+            "-c\t\tUse ANSI colors for easier reading.\n\n";
+  already_printed = true;
 }
 
 /*
