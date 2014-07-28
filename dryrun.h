@@ -15,6 +15,10 @@
 #define END_TEST() dry_run(argc, argv, suite); dry_run_benchmarks(argc, argv, benchmarks); return 0; }
 #define TEST(desc, func) suite.add_test(desc, func)
 #define BENCHMARK(desc, reps, func)  benchmarks.add_benchmark(desc, reps, func)
+#define BEFORE(func) suite.before(func)
+#define BEFORE_EACH(func) suite.before_each(func)
+#define AFTER(func) suite.after(func)
+#define AFTER_EACH(func) suite.after_each(func)
 
 #define DRY_RUN_MAJ_VER 0
 #define DRY_RUN_MIN_VER 1
