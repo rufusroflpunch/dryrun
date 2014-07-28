@@ -21,22 +21,22 @@ BENCHMARK("Benchmark #1", 1000, [] { /* Benchmark code here executes 1000 times 
 END_TEST();
 ```
 
-After this, all you need to do is compile the file and run the executable. It will execute the tests and benchmarks, then output the results. Be default, it runs them in randomized order, and displays the results with no color. This behavior can be changed.
+After this, all you need to do is compile the file and run the executable. It will execute the tests and benchmarks, then output the results. By default, it runs them in randomized order, and displays the results with no color. This behavior can be changed.
 
 The benchmark code specified above will be executed 1000 times, but you can specify any integer you like.
 
-**NOTE**: The functions passed into TEST and BENCHMARK are C++11 lambdas. The return types for tests must be (true for success). It is void for benchmarks (not return type).
+**NOTE**: The functions passed into TEST and BENCHMARK are C++11 lambdas. The return types for tests must be **bool** (true for success). It is **void** for benchmarks (not return type).
 
-There are also four additional macros that can be used as well. These apply only to tests, no benchmarks.
+There are also four additional macros that can be used as well. These apply only to tests, not benchmarks.
 
 ```
-BEFORE([] { /* Code that is executed once, before the battery of tests */ });
-AFTER([] { /* Code that is executed once, after the battery of tests */ });
+BEFORE([] { /* Code that is executed once, before the suite of tests */ });
+AFTER([] { /* Code that is executed once, after the suite of tests */ });
 BEFORE_EACH([] { /* Code that is executed before each test */ });
 AFTER_EACH([] { /* Code that is executed after each test */ });
 ```
 
-Like benchmarks, the return type for the function objects is void.
+Like benchmarks, the return type for the function objects is **void**.
 
 ### Idiotmatic approach
 
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     tests.add_test("Test #1", [] { /* Test code here */ });
     benchmarks.add_benchmark("Benchmark #1", 1000, [] { /* Benchmark code here */ });
 
-    // As above, you can specify code to be run before and after the battery of tests,
+    // As above, you can specify code to be run before and after the suite of tests,
     // as well as before and after each individual test.
     tests.before([] { });
     tests.before_each([] { });
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     // Finally, execute the tests and benchmarks. Make sure to pass in argc and argv
     // so that the generated application properly handles command line arguments
     dry_run(argc, argv, tests);
-    dry_run_benchmarks(argc, argv, tests);
+    dry_run_benchmarks(argc, argv, benchmarks);
     
     return 0;
 }
