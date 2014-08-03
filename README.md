@@ -82,11 +82,14 @@ The final generated test application can accept the following parameters:
 ```
 Usage: test [options]
 Options:
-    
+
 -d		    Run tests in determinate mode (non-randomized).
 -r		    Repeat tests multiple times. Ex: test -r 10
 -h,--help	Show this help screen.
 -c		    Use ANSI colors for easier reading.
+-b		    Show brief output (less verbose).
+-B		    Run only benchmarks.
+-T		    Run only tests.
 ```
 
 ### License
