@@ -44,7 +44,10 @@ void print_help()
             "-d\t\tRun tests in determinate mode (non-randomized).\n"
             "-r\t\tRepeat tests multiple times. Ex: test -r 10\n"
             "-h,--help\tShow this help screen.\n"
-            "-c\t\tUse ANSI colors for easier reading.\n\n";
+            "-c\t\tUse ANSI colors for easier reading.\n"
+            "-b\t\tShow brief output (less verbose).\n"
+            "-B\t\tRun only benchmarks.\n"
+            "-T\t\tRun only tests.\n\n";
   already_printed = true;
 }
 
@@ -177,27 +180,33 @@ struct bench_suite
  */
 void dry_run(int argc, char** argv, test_suite& tests)
 {
-  if (tests.test_list.empty()) return;
-
-  if (tests.before_func)
-  {
-    tests.before_func();
-  }
-
   bool determinate = false;
   bool colors = false;
+  bool brief = false;
+  bool bench_only = false;
   int repeat = 0;
 
+  // Parse cmd line options.
   for(int i = 0; i < argc; i++)
   {
     if(std::string(argv[i]) == "-d") determinate = true;
     else if(std::string(argv[i]) == "-r") repeat = std::stoi(std::string(argv[++i]));
     else if (std::string(argv[i]) == "-c") colors = true;
+    else if (std::string(argv[i]) == "-b") brief = true;
+    else if (std::string(argv[i]) == "-B") bench_only = true;
     else if(std::string(argv[i]) == "-h" || std::string(argv[i]) == "--help")
     {
       print_help();
       return;
     }
+  }
+
+  // Quit if there are no tests to run, or running only benchmarks.
+  if (tests.test_list.empty() || bench_only) return;
+
+  if (tests.before_func)
+  {
+    tests.before_func();
   }
 
   if(repeat > 0)
@@ -213,6 +222,12 @@ void dry_run(int argc, char** argv, test_suite& tests)
   std::srand(time(0));
   if(!determinate) std::random_shuffle(tests.test_list.begin(), tests.test_list.end());
 
+  // Print test header
+  if (colors) std::cout << COLOR_MAGENTA;
+  if (!brief) std::cout << "Tests:\n";
+  if (colors) std::cout << COLOR_OFF;
+
+  // Conduct the actual tests.
   std::vector<test_case> failures;
   for(auto it : tests.test_list)
   {
@@ -245,7 +260,7 @@ void dry_run(int argc, char** argv, test_suite& tests)
     tests.after_func();
   }
 
-  if(!failures.empty())
+  if(!failures.empty() && !brief)
   {
     std::sort(failures.begin(), failures.end());
     auto uniq_end = std::unique(failures.begin(), failures.end());
@@ -258,6 +273,12 @@ void dry_run(int argc, char** argv, test_suite& tests)
       std::cout << it->desc << std::endl;
       if (colors) std::cout << COLOR_OFF;
     }
+  }
+  else
+  {
+    if (colors) std::cout << COLOR_GREEN;
+    if (!brief) std::cout << "All Passed.";
+    if (colors) std::cout << COLOR_OFF;
   }
 
   std::cout << "\n\n";
@@ -276,9 +297,15 @@ void dry_run(int argc, char** argv, test_suite& tests)
 void dry_run_benchmarks(int argc, char **argv, bench_suite &benchmarks)
 {
   bool colors = false;
+  bool test_only = false;
+  bool brief = false;
+
+  // Parse cmd line args.
   for(int i = 0; i < argc; i++)
   {
     if (std::string(argv[i]) == "-c") colors = true;
+    else if (std::string(argv[i]) == "-T") test_only = true;
+    else if (std:: string(argv[i]) == "-b") brief = true;
     else if(std::string(argv[i]) == "-h" || std::string(argv[i]) == "--help")
     {
       print_help();
@@ -286,10 +313,11 @@ void dry_run_benchmarks(int argc, char **argv, bench_suite &benchmarks)
     }
   }
 
-  if (benchmarks.bench_list.empty()) return;
+  // Exit if there are no benchmarks to run, or running only tests.
+  if (benchmarks.bench_list.empty() || test_only) return;
 
   if (colors) std::cout << COLOR_MAGENTA;
-  std::cout << "Benchmarks:" << std::endl;
+  if (!brief) std::cout << "Benchmarks:" << std::endl;
   if (colors) std::cout << COLOR_OFF;
   std::cout << "TIME\t\t\tREPETITIONS\tDESCRIPTION\n\n";
 
