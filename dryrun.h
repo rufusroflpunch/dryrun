@@ -11,6 +11,7 @@
 #include <set>
 #include <chrono>
 
+// Marcos for easier test writing
 #define BEGIN_TEST() int main(int argc, char **argv) { test_suite suite; bench_suite benchmarks
 #define END_TEST() dry_run(argc, argv, suite); dry_run_benchmarks(argc, argv, benchmarks); return 0; }
 #define TEST(desc, func) suite.add_test(desc, func)
@@ -20,9 +21,11 @@
 #define AFTER(func) suite.after(func)
 #define AFTER_EACH(func) suite.after_each(func)
 
+// Current dry run version.
 #define DRY_RUN_MAJ_VER 0
-#define DRY_RUN_MIN_VER 1
+#define DRY_RUN_MIN_VER 2
 
+// Color constants
 #define COLOR_OFF "\x1b[0m"
 #define COLOR_RED "\x1b[31m"
 #define COLOR_GREEN "\x1b[32m"
@@ -204,11 +207,13 @@ void dry_run(int argc, char** argv, test_suite& tests)
   // Quit if there are no tests to run, or running only benchmarks.
   if (tests.test_list.empty() || bench_only) return;
 
+  // Execute the command that is run before the entire suite.
   if (tests.before_func)
   {
     tests.before_func();
   }
 
+  // Duplicate the test vector as required to repeat the tests the requested number of times.
   if(repeat > 0)
   {
     std::vector<test_case> copied_tests;
@@ -219,6 +224,7 @@ void dry_run(int argc, char** argv, test_suite& tests)
     tests.test_list = copied_tests;
   }
 
+  // Randomize the test vector
   std::srand(time(0));
   if(!determinate) std::random_shuffle(tests.test_list.begin(), tests.test_list.end());
 
@@ -255,11 +261,13 @@ void dry_run(int argc, char** argv, test_suite& tests)
   }
   std::cout << "\n\n";
 
+  // Execute the after command
   if (tests.after_func)
   {
     tests.after_func();
   }
 
+  // Output a more detailed view of the failures.
   if(!failures.empty() && !brief)
   {
     std::sort(failures.begin(), failures.end());
@@ -274,7 +282,7 @@ void dry_run(int argc, char** argv, test_suite& tests)
       if (colors) std::cout << COLOR_OFF;
     }
   }
-  else
+  else    // If there are no failure, let us know.
   {
     if (colors) std::cout << COLOR_GREEN;
     if (!brief) std::cout << "All Passed.";
@@ -319,8 +327,9 @@ void dry_run_benchmarks(int argc, char **argv, bench_suite &benchmarks)
   if (colors) std::cout << COLOR_MAGENTA;
   if (!brief) std::cout << "Benchmarks:" << std::endl;
   if (colors) std::cout << COLOR_OFF;
-  std::cout << "TIME\t\t\tREPETITIONS\tDESCRIPTION\n\n";
+  if (!brief) std::cout << "TIME\t\t\tREPETITIONS\tDESCRIPTION\n\n";
 
+  // Actually execute the benchmarks.
   for (auto i : benchmarks.bench_list)
   {
     std::chrono::time_point<std::chrono::system_clock> start, end;
