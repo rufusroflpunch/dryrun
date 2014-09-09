@@ -13,7 +13,7 @@
 
 // Marcos for easier test writing
 #define BEGIN_TEST() int main(int argc, char **argv) { test_suite suite; bench_suite benchmarks
-#define END_TEST() dry_run(argc, argv, suite); dry_run_benchmarks(argc, argv, benchmarks); return 0; }
+#define END_TEST() suite.run(argc, argv); benchmarks.run(argc, argv); return 0; }
 #define TEST(desc, func) suite.add_test(desc, func)
 #define BENCHMARK(desc, reps, func)  benchmarks.add_benchmark(desc, reps, func)
 #define BEFORE(func) suite.before(func)
@@ -137,6 +137,8 @@ struct test_suite
   {
     after_each_func = func;
   }
+
+  void run(int argc, char** argv);
 };
 
 // Much like the test_case class, this represents a runnable benchmark.
@@ -169,6 +171,8 @@ struct bench_suite
   {
     bench_list.push_back(bench_case(desc, reps, test));
   }
+
+  void run(int argc, char** argv);
 };
 
 
@@ -179,9 +183,8 @@ struct bench_suite
  * Output: The test results
  * @param   argc    Passed in from main.
  * @param   argv    Passed in from main.
- * @param   tests   The test_suite created that contains the actual tests to run.
  */
-void dry_run(int argc, char** argv, test_suite& tests)
+void test_suite::run(int argc, char** argv)
 {
   bool determinate = false;
   bool colors = false;
@@ -205,12 +208,12 @@ void dry_run(int argc, char** argv, test_suite& tests)
   }
 
   // Quit if there are no tests to run, or running only benchmarks.
-  if (tests.test_list.empty() || bench_only) return;
+  if (test_list.empty() || bench_only) return;
 
   // Execute the command that is run before the entire suite.
-  if (tests.before_func)
+  if (before_func)
   {
-    tests.before_func();
+    before_func();
   }
 
   // Duplicate the test vector as required to repeat the tests the requested number of times.
@@ -219,14 +222,14 @@ void dry_run(int argc, char** argv, test_suite& tests)
     std::vector<test_case> copied_tests;
 
     for(int i = 0; i < repeat; i++)
-      std::copy(tests.test_list.begin(), tests.test_list.end(), std::back_inserter(copied_tests));
+      std::copy(test_list.begin(), test_list.end(), std::back_inserter(copied_tests));
 
-    tests.test_list = copied_tests;
+    test_list = copied_tests;
   }
 
   // Randomize the test vector
   std::srand(time(0));
-  if(!determinate) std::random_shuffle(tests.test_list.begin(), tests.test_list.end());
+  if(!determinate) std::random_shuffle(test_list.begin(), test_list.end());
 
   // Print test header
   if (colors) std::cout << COLOR_MAGENTA;
@@ -235,11 +238,11 @@ void dry_run(int argc, char** argv, test_suite& tests)
 
   // Conduct the actual tests.
   std::vector<test_case> failures;
-  for(auto it : tests.test_list)
+  for(auto it : test_list)
   {
-    if (tests.before_each_func)
+    if (before_each_func)
     {
-      tests.before_each_func();
+      before_each_func();
     }
     if(it.test())
     {
@@ -254,17 +257,17 @@ void dry_run(int argc, char** argv, test_suite& tests)
       std::cout << COLOR_OFF;
       failures.push_back(it);
     }
-    if (tests.after_each_func)
+    if (after_each_func)
     {
-      tests.after_each_func();
+      after_each_func();
     }
   }
   std::cout << "\n\n";
 
   // Execute the after command
-  if (tests.after_func)
+  if (after_func)
   {
-    tests.after_func();
+    after_func();
   }
 
   // Output a more detailed view of the failures.
@@ -300,9 +303,8 @@ void dry_run(int argc, char** argv, test_suite& tests)
  * Output: The test results
  * @param   argc    Passed in from main.
  * @param   argv    Passed in from main.
- * @param   tests   The bench_suite created that contains the actual tests to run.
  */
-void dry_run_benchmarks(int argc, char **argv, bench_suite &benchmarks)
+void bench_suite::run(int argc, char **argv)
 {
   bool colors = false;
   bool test_only = false;
@@ -322,7 +324,7 @@ void dry_run_benchmarks(int argc, char **argv, bench_suite &benchmarks)
   }
 
   // Exit if there are no benchmarks to run, or running only tests.
-  if (benchmarks.bench_list.empty() || test_only) return;
+  if (bench_list.empty() || test_only) return;
 
   if (colors) std::cout << COLOR_MAGENTA;
   if (!brief) std::cout << "Benchmarks:" << std::endl;
@@ -330,7 +332,7 @@ void dry_run_benchmarks(int argc, char **argv, bench_suite &benchmarks)
   if (!brief) std::cout << "TIME\t\t\tREPETITIONS\tDESCRIPTION\n\n";
 
   // Actually execute the benchmarks.
-  for (auto i : benchmarks.bench_list)
+  for (auto i : bench_list)
   {
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();

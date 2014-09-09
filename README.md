@@ -66,8 +66,8 @@ int main(int argc, char **argv)
 
     // Finally, execute the tests and benchmarks. Make sure to pass in argc and argv
     // so that the generated application properly handles command line arguments
-    dry_run(argc, argv, tests);
-    dry_run_benchmarks(argc, argv, benchmarks);
+    tests.run(argc, argv);
+    benchmarks.run(argc, argv);
     
     return 0;
 }
