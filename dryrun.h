@@ -23,7 +23,7 @@
 
 // Current dry run version.
 #define DRY_RUN_MAJ_VER 0
-#define DRY_RUN_MIN_VER 2
+#define DRY_RUN_MIN_VER 2.1
 
 // Color constants
 #define COLOR_OFF "\x1b[0m"

@@ -1,4 +1,4 @@
-# Dry Run
+# Dry Run 0.2.1
 ## Quick and simple unit tests/benchmarks for C++
 
 ### About
